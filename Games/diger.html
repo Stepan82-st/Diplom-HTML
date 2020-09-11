@@ -1,0 +1,584 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+    <HEAD>
+        <TITLE>Diger</TITLE>
+        <STYLE type="text/css">
+        <!--
+           INPUT { width: 60px }
+           TABLE,TD { border:0; margin:0; padding:0}
+        -->
+        </STYLE>
+    </HEAD>
+    <BODY>
+
+
+<SCRIPT type="text/javascript" language="JavaScript">
+<!--
+    /////////////////////////////////////////////////////
+    // Layer function API
+    var hideName = (document.layers ? 'hide' : 'hidden');
+    var showName = (document.layers ? 'show' : 'visible');
+
+    function getObject(id) 
+    {
+        if (document.getElementById) return document.getElementById(id);
+        if (document.all) return document.all[id];
+        if (document.layers) return document.layers[id];
+    }
+
+    function getStyle(id) 
+    {
+        return (document.layers ? getObject(id) : getObject(id).style);
+    } 
+ 
+    function startLayer( id1, x, y, w, h, v)
+    {
+        return ( document.layers
+                 ? '<LAYER id=' + id1 + ' name=' + id1 + ' left="' + x + '" top="' + y 
+                   + '" width="' + w + '" height="' + h + '" visibility="' + v + '">'
+                 :'<DIV id=' + id1 + ' name=' + id1 + ' style="position: absolute; left: ' + x 
+                   + 'px; top: ' + y + 'px; width: ' + w + 'px; height: ' + h + 'px; visibility: ' + v + ';">' );
+    } 
+
+    function endLayer() 
+    {
+        return (document.layers ? '</LAYER>' : '</DIV>' );
+    } 
+
+    function setPosition(id,x,y)
+    {
+        if(navigator.userAgent.toLowerCase().indexOf("gecko")!=-1)
+        {
+            eval( 'document.getElementById(id).style.left=x+"px"' );
+            eval( 'document.getElementById(id).style.top=y+"px"' );
+        }
+        else if(document.all)
+        {
+            eval( 'document.all[id].style.posLeft=' + x );
+            eval( 'document.all[id].style.posTop=' + y );
+        }
+        else
+        {
+            eval( 'document.' + id +'.x=' + x ); 
+            eval( 'document.' + id +'.y=' + y );
+        }
+    }
+
+    /////////////////////////////////////////////////////
+    // variable declaration
+    var codeFree = 0;
+    var codeWall = 1;
+    var codeDiger = 2;
+
+    var startX = 20;
+    var startY = 150;
+
+    var matrixWidth = 19;
+    var matrixHeight = 19;
+
+    var step = 30;
+    var Matrix = new Array( matrixWidth );
+
+    var i,j;
+    for(i=0; i<matrixWidth; i++)
+    {
+        Matrix[i] = new Array( matrixHeight );
+        for(j=0; j<matrixHeight; j++)
+            Matrix[i][j] = codeWall;
+    }
+
+    function markPlace( x1,y1, x2, y2, code)
+    {
+        for(var imp=x1-1; imp<=x2-1; imp++)
+            for(var jmp=y1-1; jmp<=y2-1; jmp++)
+                Matrix[imp][jmp] = code;
+    }
+
+    for(i=2; i<matrixWidth; i+=2)
+        markPlace(i,2,i,matrixHeight-1, codeFree);
+
+    for(i=2; i<matrixHeight; i+=2)
+        markPlace(2,i,matrixHeight-1,i , codeFree);
+
+    /////////////////////////////////////////////////////
+    // build main palce
+    document.write( startLayer( "main", startX, startY, step*matrixWidth, step*matrixHeight, showName) );
+    var activeColor;
+    document.write("<TABLE cellspacing='0' cellpadding='0' border='0'>");
+    for(j=0; j<matrixHeight; j++)
+    {
+        document.write("<TR>")
+        for(i=0; i<matrixWidth; i++)
+        {
+            if(Matrix[i][j]==codeFree) activeColor = 'white'; 
+            else activeColor = 'green';
+            document.write("<TD height='"+step+"' width='"+step+"' bgcolor='"+activeColor+"'>&nbsp;</TD>")
+        }
+        document.write("</TR>")
+    }
+    document.write("</TABLE>")
+    document.write( endLayer() );
+    setPosition("main",startX, startY)
+
+    // build bomb
+    var bombX, bombY;
+    function createBomb()
+    {
+        document.write( startLayer( "bomb", startX, startY, step, step, hideName) );
+        document.write("<TABLE cellspacing='0' cellpadding='0' border='0'>");
+        document.write("<TR><TD height='"+step+"' width='"+step+"' bgcolor='white' align='center' valign='center'><IMG border='0' src='images/bomb.gif'></TD></TR>");
+        document.write("</TABLE>");
+        document.write( endLayer() );
+    }
+    createBomb();
+
+    // build bomb explosition
+    function createBombExplositions()
+    {
+        for(i=0; i<9; i++)
+        {
+            document.write( startLayer( "explosition"+i, startX, startY, step, step, hideName) );
+            document.write("<TABLE cellspacing='0' cellpadding='0' border='0'>");
+            document.write("<TR><TD height='"+step+"' width='"+step+"' bgcolor='white' align='center' valign='center'><FONT color='red'>*</FONT></TD></TR>")
+            document.write("</TABLE>")
+            document.write( endLayer() );
+        }
+    }
+    createBombExplositions();
+
+    // buid fruits
+    function createFruits()
+    {
+        var posX, posY
+        for(i=100; i<170; i++)
+        {
+            do
+            {
+                posX = Math.abs(Math.round(Math.random()*(matrixWidth-3)));
+                posY = Math.abs(Math.round(Math.random()*(matrixHeight-3)));
+            }
+            while( (Matrix[posX+1][posY+1]!=codeFree)
+                   ||((posX==0)&&((posY==0)||(posY==1)))
+                   ||((posX==1)&&((posX==0)||(posX==1))) );
+            Matrix[posX+1][posY+1]=-i;
+            document.write( startLayer( "obj"+i, startX+step*(posX+1), startY+step*(posY+1), step, step, showName) );
+            document.write("<TABLE cellspacing='0' cellpadding='0' border='0'>");
+            document.write("<TR><TD height='"+step+"' width='"+step+"' bgcolor='white' align='center' valign='center'><IMG border='0' src='images/fruit.gif'></TD></TR>")
+            document.write("</TABLE>")
+            document.write( endLayer() );
+            setPosition("obj"+i, startX+step*(posX+1), startY+step*(posY+1));
+        }
+    }
+    createFruits();
+
+    // brick wall
+    function createBricks()
+    {
+        var posX, posY
+        for(i=1000; i<1070; i++)
+        {
+            do
+            {
+                posX = Math.abs(Math.round(Math.random()*(matrixWidth-3)));
+                posY = Math.abs(Math.round(Math.random()*(matrixHeight-3)));
+            }
+            while( (Matrix[posX+1][posY+1]!=codeFree)
+                   ||((posX==0)&&((posY==0)||(posY==1)))
+                   ||((posX==1)&&((posX==0)||(posX==1))) );
+            Matrix[posX+1][posY+1]=-i;
+            document.write( startLayer( "obj"+i, startX+step*(posX+1), startY+step*(posY+1), step, step, showName) );
+            document.write("<TABLE cellspacing='0' cellpadding='0' border='0'>");
+            document.write("<TR><TD height='"+step+"' width='"+step+"' bgcolor='white' align='center' valign='center'><IMG border='0' src='images/bricks.gif'></TD></TR>")
+            document.write("</TABLE>")
+            document.write( endLayer() );
+            setPosition("obj"+i, startX+step*(posX+1), startY+step*(posY+1));
+        }
+    }
+    createBricks();
+
+    // buid spiders
+    var spidercount = 10;
+    var spiderX = new Array( 10 );
+    var spiderY = new Array( 10 );
+    function createSpiders()
+    {
+        var posX, posY
+        for(i=10000; i<10000+spidercount; i++)
+        {
+            do
+            {
+                posX = Math.abs(Math.round(Math.random()*(matrixWidth-3)));
+                posY = Math.abs(Math.round(Math.random()*(matrixHeight-3)));
+            }
+            while( (Matrix[posX+1][posY+1]!=codeFree)
+                   ||((posX==0)&&((posY==0)||(posY==1)))
+                   ||((posX==1)&&((posX==0)||(posX==1))) );
+            spiderX[i-10000] = posX+1;
+            spiderY[i-10000] = posY+1;
+            Matrix[posX+1][posY+1]=-i;
+            document.write( startLayer( "obj"+i, startX+step*(posX+1), startY+step*(posY+1), step, step, showName) );
+            document.write("<TABLE cellspacing='0' cellpadding='0' border='0'>");
+            document.write("<TR><TD height='"+step+"' width='"+step+"' bgcolor='white' align='center' valign='center'><IMG border='0' src='images/spider.gif'></TD></TR>")
+            document.write("</TABLE>")
+            document.write( endLayer() );
+            setPosition("obj"+i, startX+step*(posX+1), startY+step*(posY+1));
+        }
+    }
+    createSpiders();
+
+    // build diger
+    var digerX, digerY;
+    function createDiger( x1,y1 )
+    {
+        digerX = x1-1, digerY = y1-1;
+        Matrix[digerX][digerY] = codeDiger;
+        document.write( startLayer( "diger", startX+step*(x1-1), startY+step*(y1-1), step, step, showName) );
+        document.write("<TABLE cellspacing='0' cellpadding='0' border='0'>");
+        document.write("<TR><TD height='"+step+"' width='"+step+"' bgcolor='yellow' align='center' valign='center'><IMG border='0' src='images/diger.gif'></TD></TR>");
+        document.write("</TABLE>");
+        document.write( endLayer() );
+        setPosition("diger", startX+step*(x1-1), startY+step*(y1-1));
+    }
+    createDiger( 2, 2 );
+
+    var bombFlag = false;
+    function initBomb()
+    {
+        if(!bombFlag)
+        {
+            bombFlag = true;
+            bombX = digerX;
+            bombY = digerY;
+            setPosition("bomb",startX+step*bombX, startY+step*bombY);
+            getStyle("bomb").visibility = showName;
+            setTimeout( 'bombExplosion();', speed*5 );
+        }
+    }
+
+    function objectDelete( x,y )
+    {
+        if(Matrix[x][y]<=-10000)
+        {
+            bonus+=1000;
+            document.frm.score.value = bonus;
+        }
+        if((Matrix[x][y]>=-1000)&&(Matrix[x][y]<0))
+        {
+            bonus-=200;
+            document.frm.score.value = bonus;
+        }
+        getStyle("obj"+Math.abs(Matrix[x][y])).visibility = hideName;
+        Matrix[x][y]=codeFree;
+    }
+
+    function bombExplosion()
+    {
+        getStyle("bomb").visibility = hideName;
+
+        if((bombY>=3)&&(Matrix[bombX][bombY-2]!=codeWall)&&(Matrix[bombX][bombY-1]!=codeWall)) getStyle("explosition0").visibility = showName;
+        setPosition("explosition0",startX+step*bombX, startY+step*(bombY-2));
+        if((bombY>=2)&&(Matrix[bombX][bombY-1]!=codeWall)) getStyle("explosition1").visibility = showName;
+        setPosition("explosition1",startX+step*bombX, startY+step*(bombY-1));
+
+        if((bombX>=3)&&(Matrix[bombX-2][bombY]!=codeWall)&&(Matrix[bombX-1][bombY]!=codeWall)) getStyle("explosition2").visibility = showName;
+        setPosition("explosition2",startX+step*(bombX-2), startY+step*bombY);
+        if((bombX>=2)&&(Matrix[bombX-1][bombY]!=codeWall)) getStyle("explosition3").visibility = showName;
+        setPosition("explosition3",startX+step*(bombX-1), startY+step*bombY);
+
+        getStyle("explosition4").visibility = showName;
+        setPosition("explosition4",startX+step*bombX, startY+step*bombY);
+
+        if((bombX<=matrixWidth-3)&&(Matrix[bombX+1][bombY]!=codeWall)) getStyle("explosition5").visibility = showName;
+        setPosition("explosition5",startX+step*(bombX+1), startY+step*bombY);
+        if((bombX<=matrixWidth-4)&&(Matrix[bombX+2][bombY]!=codeWall)&&(Matrix[bombX+1][bombY]!=codeWall)) getStyle("explosition6").visibility = showName;
+        setPosition("explosition6",startX+step*(bombX+2), startY+step*bombY);
+
+        if((bombY<=matrixHeight-3)&&(Matrix[bombX][bombY+1]!=codeWall)) getStyle("explosition7").visibility = showName;
+        setPosition("explosition7",startX+step*bombX, startY+step*(bombY+1));
+        if((bombY<=matrixHeight-4)&&(Matrix[bombX][bombY+2]!=codeWall)&&(Matrix[bombX][bombY+1]!=codeWall)) getStyle("explosition8").visibility = showName;
+        setPosition("explosition8",startX+step*bombX, startY+step*(bombY+2));
+
+        setTimeout( 'bombExplosionsDelete();', speed )
+
+        // delete explosed object (fruits and bricks)
+        // top direction
+        if((bombY>=3)
+          &&(Matrix[bombX][bombY-1]!=codeWall)
+          &&(Matrix[bombX][bombY-2]<0))
+            objectDelete( bombX, bombY-2 );
+        if((bombY>=2)
+          &&(Matrix[bombX][bombY-1]<0))
+            objectDelete( bombX, bombY-1 );
+        // left direction
+        if((bombX>=3)
+          &&(Matrix[bombX-1][bombY]!=codeWall)
+          &&(Matrix[bombX-2][bombY]<0))
+            objectDelete( bombX-2, bombY );
+        if((bombX>=2)
+          &&(Matrix[bombX-1][bombY]<0))
+            objectDelete( bombX-1, bombY );
+        // right direction
+        if((bombX<=matrixWidth-1)
+          &&(Matrix[bombX+1][bombY]!=codeWall)
+          &&(Matrix[bombX+2][bombY]<0))
+            objectDelete( bombX+2, bombY );
+       if((bombX<=matrixWidth)
+          &&(Matrix[bombX+1][bombY]<0))
+            objectDelete( bombX+1, bombY );
+        // down direction
+        if((bombY<=matrixHeight-1)
+          &&(Matrix[bombX][bombY+1]!=codeWall)
+          &&(Matrix[bombX][bombY+2]<0))
+            objectDelete( bombX, bombY+2 );
+        if((bombY<=matrixHeight)
+          &&(Matrix[bombX][bombY+1]<0))
+            objectDelete( bombX, bombY+1 );
+        // center bomb
+        if(Matrix[bombX][bombY]<0)
+        {
+            objectDelete( bombX, bombY );
+        }
+        // check diger death
+        if(((Math.abs(bombY-digerY)<3)&&(Matrix[bombX][bombY-1]!=codeWall)&&(Matrix[bombX][bombY+1]!=codeWall)&&(bombX==digerX)) 
+          ||((Math.abs(bombX-digerX)<3)&&(Matrix[bombX-1][bombY]!=codeWall)&&(Matrix[bombX+1][bombY]!=codeWall)&&(bombY==digerY))
+          ||((bombX==digerX)&&(bombY==digerY))
+          ) 
+        {
+            alert("Game over.\nYou kill the diger!!!");
+            window.location.reload();
+        }
+        bombFlag = false;
+    }
+
+    function bombExplosionsDelete()
+    {
+        for(i=0; i<9; i++)
+            getStyle("explosition"+i).visibility = hideName;
+    }
+
+    //////////////////////////////////////////////////////
+    // diger event function
+    var bonus = 0;
+    function up()
+    {
+        if((Matrix[digerX][digerY-1]==codeFree)||((Matrix[digerX][digerY-1]>-1000)&&(Matrix[digerX][digerY-1]<0)))
+        {
+            if((Matrix[digerX][digerY-1]>-1000)&&(Matrix[digerX][digerY-1]<0))
+            {
+                bonus+=50;
+                document.frm.score.value = bonus;
+                getStyle("obj"+Math.abs(Matrix[digerX][digerY-1])).visibility = hideName;
+                Matrix[digerX][digerY-1]=codeFree;
+            }
+            Matrix[digerX][digerY] = codeFree;
+            digerY--;
+            setPosition("diger",startX+step*digerX, startY+step*digerY);
+            Matrix[digerX][digerY] = codeDiger;
+        }
+    }
+
+    function left()
+    {
+        if((Matrix[digerX-1][digerY]==codeFree)||((Matrix[digerX-1][digerY]>-1000)&&(Matrix[digerX-1][digerY]<0)))
+        {
+            if((Matrix[digerX-1][digerY]>-1000)&&(Matrix[digerX-1][digerY]<0))
+            {
+                bonus+=50;
+                document.frm.score.value = bonus;
+                getStyle("obj"+Math.abs(Matrix[digerX-1][digerY])).visibility = hideName;
+                Matrix[digerX-1][digerY]=codeFree;
+            }
+            Matrix[digerX][digerY] = codeFree;
+            digerX--;
+            setPosition("diger",startX+step*digerX, startY+step*digerY);
+            Matrix[digerX][digerY] = codeDiger;
+        }
+    }
+
+    function down()
+    {
+        if((Matrix[digerX][digerY+1]==codeFree)||((Matrix[digerX][digerY+1]>-1000)&&(Matrix[digerX][digerY+1]<0)))
+        {
+            if((Matrix[digerX][digerY+1]>-1000)&&(Matrix[digerX][digerY+1]<0))
+            {
+                bonus+=50;
+                document.frm.score.value = bonus;
+                getStyle("obj"+Math.abs(Matrix[digerX][digerY+1])).visibility = hideName;
+                Matrix[digerX][digerY+1]=codeFree;
+            }
+            Matrix[digerX][digerY] = codeFree;
+            digerY++;
+            setPosition("diger",startX+step*digerX, startY+step*digerY);
+            Matrix[digerX][digerY] = codeDiger;
+        }
+    }
+
+    function right()
+    {
+        if((Matrix[digerX+1][digerY]==codeFree)||((Matrix[digerX+1][digerY]>-1000)&&(Matrix[digerX+1][digerY]<0)))
+        {
+            if((Matrix[digerX+1][digerY]>-1000)&&(Matrix[digerX+1][digerY]<0))
+            {
+                bonus+=50;
+                document.frm.score.value = bonus;
+                getStyle("obj"+Math.abs(Matrix[digerX+1][digerY])).visibility = hideName;
+                Matrix[digerX+1][digerY]=codeFree;
+            }
+            Matrix[digerX][digerY] = codeFree;
+            digerX++;
+            setPosition("diger",startX+step*digerX, startY+step*digerY);
+            Matrix[digerX][digerY] = codeDiger;
+        }
+    }
+
+    var direction = 4;
+    var cdUP = 1;
+    var cdLEFT = 2;
+    var cdRIGHT = 3;
+    var cdDOWN = 4;
+    var speed = 500;
+
+    var spiderDirection = Array( spidercount );
+    for(i=0; i <spidercount; i++)
+    {
+        spiderDirection[i] = cdDOWN;
+    }
+
+    function movespider()
+    {
+        var curX, curY;
+        for(i=0; i <spidercount; i++)
+        {
+            curX = spiderX[i];
+            curY = spiderY[i];
+            if((Matrix[curX][curY]==codeFree)||(Matrix[curX][curY]==codeDiger)) continue;
+            if((Matrix[curX][curY+1]==codeFree)&&(spiderDirection[i]==cdDOWN))
+            {
+                setPosition("obj"+Math.abs(Matrix[curX][curY]),startX+step*curX, startY+step*(curY+1));
+                Matrix[curX][curY+1] = Matrix[curX][curY];
+                Matrix[curX][curY] = codeFree;
+                spiderY[i]++;
+            }
+            else if((Matrix[curX+1][curY]==codeFree)&&(spiderDirection[i]==cdRIGHT))
+            {
+                setPosition("obj"+Math.abs(Matrix[curX][curY]),startX+step*(curX+1), startY+step*(curY));
+                Matrix[curX+1][curY] = Matrix[curX][curY];
+                Matrix[curX][curY] = codeFree;
+                spiderX[i]++;
+            }
+            else if((Matrix[curX][curY-1]==codeFree)&&(spiderDirection[i]==cdUP))
+            {
+                setPosition("obj"+Math.abs(Matrix[curX][curY]),startX+step*(curX), startY+step*(curY-1));
+                Matrix[curX][curY-1] = Matrix[curX][curY];
+                Matrix[curX][curY] = codeFree;
+                spiderY[i]--;
+            }
+            else if((Matrix[curX-1][curY]==codeFree)&&(spiderDirection[i]==cdLEFT))
+            {
+                setPosition("obj"+Math.abs(Matrix[curX][curY]),startX+step*(curX-1), startY+step*(curY));
+                Matrix[curX-1][curY] = Matrix[curX][curY];
+                Matrix[curX][curY] = codeFree;
+                spiderX[i]--;
+            }
+            else
+            {
+                if( spiderDirection[i]==cdDOWN) spiderDirection[i]=cdRIGHT
+                else if( spiderDirection[i]==cdRIGHT ) spiderDirection[i]=cdUP;
+                else if( spiderDirection[i]==cdUP ) spiderDirection[i]=cdLEFT;
+                else if( spiderDirection[i]==cdLEFT ) spiderDirection[i]=cdDOWN;
+            }
+            if(((curY==digerY)&&(Math.abs(curX-digerX)<=1))
+               ||((curX==digerX)&&(Math.abs(curY-digerY)<=1)) )
+            {
+                alert( "Spiders kill the diger!!!" );
+                window.location.reload();
+            }
+        }
+    }
+
+    function move()
+    {
+        if( direction==cdUP ) up();
+        else if( direction==cdLEFT ) left();
+        else if( direction==cdRIGHT ) right();
+        else down();
+
+        movespider();
+
+        setTimeout( 'move();', speed );
+    }
+    move();
+
+    // Key Listner
+    function keyListner(e)
+    {
+        if((navigator.appName.indexOf('Netscape')!=-1)||(navigator.userAgent.toLowerCase().indexOf("gecko")!=-1))
+        {  
+            if ((e.which == 37)||(e.which == 44)||(e.which == 60)||(e.which == 97)||(e.which == 65)||(e.which == 52)) direction=cdLEFT;   // < a A
+            if ((e.which == 39)||(e.which == 46)||(e.which == 62)||(e.which == 100)||(e.which == 68)||(e.which == 54)) direction=cdRIGHT;  // > d D
+            if ((e.which == 32)||(e.which == 53)) initBomb();
+            if ((e.which == 38)||(e.which == 108)||(e.which == 76)||(e.which == 119)||(e.which == 87)||(e.which == 56)) direction=cdUP; //l L w W
+            if ((e.which == 40)||(e.which == 47)||(e.which == 63)||(e.which == 115)||(e.which == 83)||(e.which == 50)) direction=cdDOWN; // / ? s S
+        }
+        else if(event.keyCode)
+        {  
+            if ((event.keyCode == 37)||(event.keyCode == 44)||(event.keyCode == 60)||(event.keyCode == 97)||(event.keyCode == 65)||(event.keyCode == 52)) direction=cdLEFT;   // < a A
+            if ((event.keyCode == 39)||(event.keyCode == 46)||(event.keyCode == 62)||(event.keyCode == 100)||(event.keyCode == 68)||(event.keyCode == 54)) direction=cdRIGHT;  // > d D
+            if ((event.keyCode == 32)||(event.keyCode == 53)) initBomb();
+            if ((event.keyCode == 38)||(event.keyCode == 108)||(event.keyCode == 76)||(event.keyCode == 119)||(event.keyCode == 87)||(event.keyCode == 56)) direction=cdUP; //l L w W
+            if ((event.keyCode == 40)||(event.keyCode == 47)||(event.keyCode == 63)||(event.keyCode == 115)||(event.keyCode == 83)||(event.keyCode == 50)) direction=cdDOWN; // / ? s S
+        }
+    }
+
+    // set key listner
+    if(navigator.userAgent.toLowerCase().indexOf("gecko")!=-1)
+    {
+        document.onkeydown = keyListner;
+    }
+    else if(document.body)
+    {
+        document.body.onkeydown = keyListner;
+    }
+    else if(navigator.appName.indexOf('Netscape')!=-1)
+    {
+        document.captureEvents(Event.KEYDOWN);
+        document.onkeydown = keyListner;
+    }
+//-->
+</SCRIPT>
+
+    <FORM name='frm'>
+    <TABLE border='0'>
+        <TR>
+            <TD>&nbsp;</TD>
+            <TD><INPUT type='button' width='60' value='up' onclick='direction=cdUP'></TD>
+            <TD>&nbsp;</TD>
+            <TD>&nbsp;</TD>
+            <TD>&nbsp;</TD>
+            <TD>&nbsp;</TD>
+        </TR>
+        <TR>
+            <TD><INPUT type='button' width='60' value='left' onclick='direction=cdLEFT'></TD>
+            <TD><INPUT type='button' width='60' value='bomb' onclick='initBomb()'></TD>
+            <TD><INPUT type='button' width='60' value='right' onclick='direction=cdRIGHT'></TD>
+            <TD align='right'  width='150'>
+                <INPUT type='button' width='100' value='restart' onclick='window.location.reload();'>
+            </TD>
+            <TD align='right'  width='150'>
+                <B>Score :</B> <INPUT name='score' width='100' value='0' disabled>
+            </TD>
+        </TR>
+        <TR>
+            <TD>&nbsp;</TD>
+            <TD><INPUT type='button' width='60' value='down' onclick='direction=cdDOWN'></TD>
+            <TD>&nbsp;</TD>
+            <TD>&nbsp;</TD>
+            <TD>&nbsp;</TD>
+            <TD>&nbsp;</TD>
+        </TR>
+    </TABLE>
+    <HR width="600" align="left">
+    </FORM>
+
+</BODY>
+</HTML>

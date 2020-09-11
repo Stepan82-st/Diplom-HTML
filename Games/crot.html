@@ -1,0 +1,310 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+    <HEAD>
+        <TITLE>Crot</TITLE>
+        <STYLE type="text/css">
+        <!--
+           INPUT { width: 60px }
+           TABLE,TD { border:1; margin:0; padding:0}
+        -->
+        </STYLE>
+    </HEAD>
+    <BODY>
+
+<SCRIPT type="text/javascript" language="JavaScript">
+<!--
+    /////////////////////////////////////////////////////
+    // Layer function API
+    var hideName = (document.layers ? 'hide' : 'hidden');
+    var showName = (document.layers ? 'show' : 'visible');
+
+    function getObject(id) 
+    {
+        if (document.getElementById) return document.getElementById(id);
+        if (document.all) return document.all[id];
+        if (document.layers) return document.layers[id];
+    }
+
+    function getStyle(id) 
+    {
+        return (document.layers ? getObject(id) : getObject(id).style);
+    } 
+ 
+    function startLayer( id1, x, y, w, h, v)
+    {
+        return ( document.layers
+                 ? '<LAYER id=' + id1 + ' name=' + id1 + ' left="' + x + '" top="' + y 
+                   + '" width="' + w + '" height="' + h + '" visibility="' + v + '">'
+                 :'<DIV id=' + id1 + ' name=' + id1 + ' style="position: absolute; left: ' + x 
+                   + 'px; top: ' + y + 'px; width: ' + w + 'px; height: ' + h + 'px; visibility: ' + v + ';">' );
+    } 
+
+    function endLayer() 
+    {
+        return (document.layers ? '</LAYER>' : '</DIV>' );
+    } 
+
+    function setPosition(id,x,y)
+    {
+        if(navigator.userAgent.toLowerCase().indexOf("gecko")!=-1)
+        {
+            eval( 'document.getElementById(id).style.left=x+"px"' );
+            eval( 'document.getElementById(id).style.top=y+"px"' );
+        }
+        else if(document.all)
+        {
+            eval( 'document.all[id].style.posLeft=' + x );
+            eval( 'document.all[id].style.posTop=' + y );
+        }
+        else
+        {
+            eval( 'document.' + id +'.x=' + x ); 
+            eval( 'document.' + id +'.y=' + y );
+        }
+    }
+
+    /////////////////////////////////////////////////////
+    // variable declaration
+    var codeFree = 0;
+    var codeWall = 1;
+    var codeBar = 2;
+    var codeDiger = 3;
+    var codeFinalBar = 4;
+
+    var startX = 20;
+    var startY = 100;
+
+    var matrixWidth = 11;
+    var matrixHeight = 8;
+    
+    var finalX1=2,finalY1=2,finalX2=2,finalY2=7;
+
+    var step = 30;
+    var Matrix = new Array( matrixWidth );
+
+    var i,j;
+    for(i=0; i<matrixWidth; i++)
+    {
+        Matrix[i] = new Array( matrixHeight );
+        for(j=0; j<matrixHeight; j++)
+            Matrix[i][j] = codeWall;
+    }
+
+    function markPlace( x1,y1, x2, y2, code)
+    {
+        for(var imp=x1-1; imp<=x2-1; imp++)
+            for(var jmp=y1-1; jmp<=y2-1; jmp++)
+                Matrix[imp][jmp] = code;
+    }
+    markPlace(2,2,4,7, codeFree);
+    markPlace(6,2,10,3, codeFree);
+    markPlace(7,4,10,5, codeFree);
+    markPlace(5,5,6,5, codeFree);
+    markPlace(7,6,7,7, codeFree);
+    markPlace(8,7,9,7, codeFree);
+    markPlace(9,6,9,6, codeFree);
+
+    markPlace(finalX1,finalY1,finalX2,finalY2,codeFinalBar);
+
+    /////////////////////////////////////////////////////
+    // build main palce
+    document.write( startLayer( "main", startX, startY, step*matrixWidth, step*matrixHeight, showName) );
+    var activeColor;
+    document.write("<TABLE cellspacing='0' cellpadding='0' border='0'>");
+    for(j=0; j<matrixHeight; j++)
+    {
+        document.write("<TR>");
+        for(i=0; i<matrixWidth; i++)
+        {
+            if((Matrix[i][j]==codeFree)||(Matrix[i][j]==codeBar)) activeColor = 'white'; 
+            else if(Matrix[i][j]==codeFinalBar) activeColor = 'blue';
+            else activeColor = 'green';
+            document.write("<TD height='"+step+"' width='"+step+"' bgcolor='"+activeColor+"'>&nbsp;</TD>");
+        }
+        document.write("</TR>");
+    }
+    document.write("</TABLE>");
+    document.write( endLayer() );
+    setPosition("main",startX, startY);
+
+    // build bars
+    var currentbarcount = 0;
+    function createBar( x1,y1 )
+    {
+        currentbarcount++;
+        Matrix[x1-1][y1-1] = -currentbarcount;
+        document.write( startLayer( "bar"+currentbarcount, startX+step*(x1-1), startY+step*(y1-1), step, step, showName) );
+        document.write("<TABLE cellspacing='0' cellpadding='0' border='1'>");
+        document.write("<TR><TD height='"+(step-2)+"' width='"+(step-2)+"' bgcolor='black'>&nbsp;</TD></TR>");
+        document.write("</TABLE>");
+        document.write( endLayer() );
+        setPosition("bar"+currentbarcount, startX+step*(x1-1), startY+step*(y1-1)); 
+    }
+    createBar( 7, 3 );
+    createBar( 7, 4 );
+    createBar( 7, 6 );
+    createBar( 8, 4 );
+    createBar( 9, 3 );
+    createBar( 9, 5 );
+
+    // build diger
+    var currentDigerX, currentDigerY;
+    function createDiger( x1,y1 )
+    {
+        currentDigerX = x1-1, currentDigerY = y1-1;
+        document.write( startLayer( "diger", startX+step*(x1-1), startY+step*(y1-1), step, step, showName) );
+        document.write("<TABLE cellspacing='0' cellpadding='0' border='0'>");
+        document.write("<TR><TD height='"+step+"' width='"+step+"' bgcolor='yellow' align='center' valign='center'><IMG border='0' src='images/diger.gif'></TD></TR>");
+        document.write("</TABLE>");
+        document.write( endLayer() );
+        setPosition("diger", startX+step*(x1-1), startY+step*(y1-1)); 
+
+    }
+    createDiger( 7, 5 );
+
+    //////////////////////////////////////////////////////
+    // diger event function
+    function up()
+    {
+        if((Matrix[currentDigerX][currentDigerY-1]<0)&&((Matrix[currentDigerX][currentDigerY-2]==codeFree)||(Matrix[currentDigerX][currentDigerY-2]==codeFinalBar)))
+        {
+            setPosition("bar"+Math.abs(Matrix[currentDigerX][currentDigerY-1]),startX+step*(currentDigerX), startY+step*(currentDigerY-2));
+            Matrix[currentDigerX][currentDigerY-2]=Matrix[currentDigerX][currentDigerY-1];
+            Matrix[currentDigerX][currentDigerY-1]=codeFree;
+            currentDigerY--;
+            setPosition("diger",startX+step*currentDigerX, startY+step*currentDigerY);
+        }
+        else if((Matrix[currentDigerX][currentDigerY-1]==codeFree)||(Matrix[currentDigerX][currentDigerY-1]==codeFinalBar))
+        {
+            Matrix[currentDigerX][currentDigerY-1]=codeFree;
+            currentDigerY--;
+            setPosition("diger",startX+step*currentDigerX, startY+step*currentDigerY);
+        }
+        checkWin();
+    }
+
+    function left()
+    {
+        if((Matrix[currentDigerX-1][currentDigerY]<0)&&((Matrix[currentDigerX-2][currentDigerY]==codeFree)||(Matrix[currentDigerX-2][currentDigerY]==codeFinalBar)))
+        {
+            setPosition("bar"+Math.abs(Matrix[currentDigerX-1][currentDigerY]),startX+step*(currentDigerX-2), startY+step*(currentDigerY));
+            Matrix[currentDigerX-2][currentDigerY]=Matrix[currentDigerX-1][currentDigerY];
+            Matrix[currentDigerX-1][currentDigerY]=codeFree;
+            currentDigerX--;
+            setPosition("diger",startX+step*currentDigerX, startY+step*currentDigerY);
+        }
+        else if((Matrix[currentDigerX-1][currentDigerY]==codeFree)||(Matrix[currentDigerX-1][currentDigerY]==codeFinalBar))
+        {
+            Matrix[currentDigerX-1][currentDigerY]=codeFree;
+            currentDigerX--;
+            setPosition("diger",startX+step*currentDigerX, startY+step*currentDigerY);
+        }
+        checkWin();
+    }
+
+    function down()
+    {
+        if((Matrix[currentDigerX][currentDigerY+1]<0)&&((Matrix[currentDigerX][currentDigerY+2]==codeFree)||(Matrix[currentDigerX][currentDigerY+2]==codeFinalBar)))
+        {
+            setPosition("bar"+Math.abs(Matrix[currentDigerX][currentDigerY+1]),startX+step*(currentDigerX), startY+step*(currentDigerY+2));
+            Matrix[currentDigerX][currentDigerY+2]=Matrix[currentDigerX][currentDigerY+1];
+            Matrix[currentDigerX][currentDigerY+1]=codeFree;
+            currentDigerY++;
+            setPosition("diger",startX+step*currentDigerX, startY+step*currentDigerY);
+        }
+        else if((Matrix[currentDigerX][currentDigerY+1]==codeFree)||(Matrix[currentDigerX][currentDigerY+1]==codeFinalBar))
+        {
+            Matrix[currentDigerX][currentDigerY+1]=codeFree;
+            currentDigerY++;
+            setPosition("diger",startX+step*currentDigerX, startY+step*currentDigerY);
+        }
+        checkWin();
+    }
+
+    function right()
+    {
+        if((Matrix[currentDigerX+1][currentDigerY]<0)&&((Matrix[currentDigerX+2][currentDigerY]==codeFree)||(Matrix[currentDigerX+2][currentDigerY]==codeFinalBar)))
+        {
+            setPosition("bar"+Math.abs(Matrix[currentDigerX+1][currentDigerY]),startX+step*(currentDigerX+2), startY+step*(currentDigerY));
+            Matrix[currentDigerX+2][currentDigerY]=Matrix[currentDigerX+1][currentDigerY];
+            Matrix[currentDigerX+1][currentDigerY]=codeFree;
+            currentDigerX++;
+            setPosition("diger",startX+step*currentDigerX, startY+step*currentDigerY);
+        }
+        else if((Matrix[currentDigerX+1][currentDigerY]==codeFree)||(Matrix[currentDigerX+1][currentDigerY]==codeFinalBar))
+        {
+            Matrix[currentDigerX+1][currentDigerY]=codeFree;
+            currentDigerX++;
+            setPosition("diger",startX+step*currentDigerX, startY+step*currentDigerY);
+        }
+        checkWin();
+    }
+
+    function checkWin()
+    {
+        for(var imp=finalX1-1; imp<=finalX2-1; imp++)
+            for(var jmp=finalY1-1; jmp<=finalY2-1; jmp++)
+                if(Matrix[imp][jmp]>=0) return;
+        alert("Win!!!");
+        window.location.reload();
+    }
+
+    // Key Listner
+    function keyListner(e)
+    {
+        if((navigator.appName.indexOf('Netscape')!=-1)||(navigator.userAgent.toLowerCase().indexOf("gecko")!=-1))
+        {  
+            if ((e.which == 37)||(e.which == 44)||(e.which == 60)||(e.which == 97)||(e.which == 65)||(e.which == 52)) left(); 
+            if ((e.which == 39)||(e.which == 46)||(e.which == 62)||(e.which == 100)||(e.which == 68)||(e.which == 54)) right();
+            if ((e.which == 38)||(e.which == 108)||(e.which == 76)||(e.which == 119)||(e.which == 87)||(e.which == 56)) up(); 
+            if ((e.which == 40)||(e.which == 47)||(e.which == 63)||(e.which == 115)||(e.which == 83)||(e.which == 50)) down(); 
+        }
+        else if(event.keyCode)
+        {  
+            if ((event.keyCode == 37)||(event.keyCode == 44)||(event.keyCode == 60)||(event.keyCode == 97)||(event.keyCode == 65)||(event.keyCode == 52)) left();
+            if ((event.keyCode == 39)||(event.keyCode == 46)||(event.keyCode == 62)||(event.keyCode == 100)||(event.keyCode == 68)||(event.keyCode == 54)) right();
+            if ((event.keyCode == 38)||(event.keyCode == 108)||(event.keyCode == 76)||(event.keyCode == 119)||(event.keyCode == 87)||(event.keyCode == 56)) up();
+            if ((event.keyCode == 40)||(event.keyCode == 47)||(event.keyCode == 63)||(event.keyCode == 115)||(event.keyCode == 83)||(event.keyCode == 50)) down();
+        }
+    }
+
+    // set Key Listner
+    if(navigator.userAgent.toLowerCase().indexOf("gecko")!=-1)
+    {
+        document.onkeydown = keyListner;
+    }
+    else if(document.body)
+    {
+        document.body.onkeydown = keyListner;
+    }
+    else if(navigator.appName.indexOf('Netscape')!=-1)
+    {  
+        document.captureEvents(Event.KEYDOWN);
+        document.onkeydown = keyListner;
+    }
+//-->
+</SCRIPT>
+
+    <FORM name='frm'>
+    <TABLE border='0'>
+        <TR>
+            <TD>&nbsp;</TD>
+            <TD><INPUT type='button' width='60' value='up' onclick='up()'></TD>
+            <TD>&nbsp;</TD>
+            <TD>&nbsp;</TD>
+            <TD>&nbsp;</TD>
+        </TR>
+        <TR>
+            <TD><INPUT type='button' width='60' value='left' onclick='left()'></TD>
+            <TD><INPUT type='button' width='60' value='down' onclick='down()'></TD>
+            <TD><INPUT type='button' width='60' value='right' onclick='right()'></TD>
+            <TD align='right'  width='150'>
+                <INPUT type='button' width='100' value='restart' onclick='window.location.reload();'>
+            </TD>
+        </TR>
+    </TABLE>
+    <HR width="370" align="left">
+    </FORM>
+
+</BODY>
+</HTML>

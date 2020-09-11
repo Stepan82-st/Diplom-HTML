@@ -1,0 +1,192 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+    <HEAD>
+        <TITLE>15</TITLE>
+        <STYLE type="text/css">
+        <!--
+           INPUT { width: 60px }
+           A
+           {
+               font-weight: bold;
+               text-decoration: none;
+           }
+        -->
+        </STYLE>
+    </HEAD>
+    <BODY>
+<SCRIPT type="text/javascript" language="JavaScript">
+<!--
+    /////////////////////////////////////////////////////
+    // Layer function API
+    var hideName = (document.layers ? 'hide' : 'hidden');
+    var showName = (document.layers ? 'show' : 'visible');
+
+    function getObject(id) 
+    {
+        if (document.getElementById) return document.getElementById(id);
+        if (document.all) return document.all[id];
+        if (document.layers) return document.layers[id];
+    }
+
+    function getStyle(id) 
+    {
+        return (document.layers ? getObject(id) : getObject(id).style);
+    } 
+ 
+    function startLayer( id1, x, y, w, h, v)
+    {
+        return ( document.layers
+                 ? '<LAYER id=' + id1 + ' name=' + id1 + ' left="' + x + '" top="' + y 
+                   + '" width="' + w + '" height="' + h + '" visibility="' + v + '">'
+                 :'<DIV id=' + id1 + ' name=' + id1 + ' style="position: absolute; left: ' + x 
+                   + 'px; top: ' + y + 'px; width: ' + w + 'px; height: ' + h + 'px; visibility: ' + v + ';">' );
+    } 
+
+    function endLayer() 
+    {
+        return (document.layers ? '</LAYER>' : '</DIV>' );
+    } 
+
+    function setPosition(id,x,y)
+    {
+        if(navigator.userAgent.toLowerCase().indexOf("gecko")!=-1)
+        {
+            eval( 'document.getElementById(id).style.left=x+"px"' );
+            eval( 'document.getElementById(id).style.top=y+"px"' );
+        }
+        else if(document.all)
+        {
+            eval( 'document.all[id].style.posLeft=' + x );
+            eval( 'document.all[id].style.posTop=' + y );
+        }
+        else
+        {
+            eval( 'document.' + id +'.x=' + x ); 
+            eval( 'document.' + id +'.y=' + y );
+        }
+    }
+
+    /////////////////////////////////////////////////////
+    // variable declaration
+    var startX = 100;
+    var startY = 100;
+
+    var step = 30;
+    var i,j;
+
+    /////////////////////////////////////////////////////
+    // build main palce
+    document.write( startLayer( "main", startX, startY, 6*step, 6*step, showName) );
+    var activeColor;
+    document.write("<TABLE cellspacing='0' cellpadding='0' border='0' bgcolor='pink'>");
+    document.write("<TR><TD colspan='3' height='"+step+"' width='"+(6*step)+"'>&nbsp;</TD></TR>");
+    document.write("<TR>");
+    document.write("    <TD width='"+step+"' height='"+4*step+"'>&nbsp;</TD>");
+    document.write("    <TD height='"+4*step+"' width='"+(4*step)+"' bgcolor='white'>&nbsp;</TD>");
+    document.write("    <TD height='"+4*step+"' width='"+step+"'>&nbsp;</TD>");
+    document.write("</TR>");
+    document.write("<TR><TD colspan='3' height='"+step+"' width='"+(6*step)+"'>&nbsp;</TD></TR>");
+    document.write("</TABLE>");
+    document.write( endLayer() );
+    setPosition("main",startX, startY)
+
+    var Matrix = new Array(1,2,3,4,5,6,0,8,9,10,7,11,13,14,15,12);
+/*
+    var Matrix = new Array(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,0);
+
+    var Matrix = new Array( 16 );
+    for(i=1;i<=15;i++)
+        Matrix[i-1] = i;
+    Matrix[15] = 0;
+*/
+    // move matrix elements
+    for(i=0;i<2000;i++)
+    {
+        for(j=0;j<16;j++)
+            if(Matrix[j] == 0)
+                pos1 = j;
+        pos2 = Math.round( Math.random()*15 );
+        if(( pos1 != pos2 )
+           &&(
+               ((Math.abs( (pos1+1)%4-(pos2+1)%4 )==1) && (Math.abs(Math.ceil( (pos1+1)/4 ) - Math.ceil( (pos2+1)/4))==0))
+               ||
+               ((Math.abs( (pos1+1)%4-(pos2+1)%4 )==0) && (Math.abs(Math.ceil( (pos1+1)/4 ) - Math.ceil( (pos2+1)/4))==1))
+             )
+           &&(!( ((pos1+1)%4==0) && ((pos2+1)%4==1) ))   
+           &&(!( ((pos1+1)%4==1) && ((pos2+1)%4==0) ))   
+          )
+        {
+            j = Matrix[ pos1 ];
+            Matrix[ pos1 ] = Matrix[ pos2 ];
+            Matrix[ pos2 ] = j;
+            // testMatrix();
+        }
+
+    }
+
+    function testMatrix()
+    {
+            var str ="";
+            for(j=0;j<16;j++)
+                if((j+1)%4==0)
+                    str += Matrix[j]+"\n";
+                else
+                    str += Matrix[j]+",";
+            alert( str );
+    }
+
+    // buid bars
+    function createBars()
+    {
+        for(i=0; i<16; i++)
+            if( Matrix[i]!=0 )
+            {
+                document.write( startLayer( "bar"+i, startX+step*(i%4+1), startY+step*(Math.floor(i/4)+1), step, step, showName) );
+                document.write("<TABLE cellspacing='0' cellpadding='0' border='1'>");
+                document.write("\n<TR><TD height='"+(step-2)+"px' width='"+(step-2)+"px' bgcolor='silver' align='center' valign='center'><A href='#' onClick='moveBar(\"bar"+i+"\"," + Matrix[i] + "); return true;'>" + Matrix[i] + "</A></TD></TR>")
+                document.write("</TABLE>")
+                document.write( endLayer() );
+                setPosition("bar"+i, startX+step*(i%4+1), startY+step*(Math.floor(i/4)+1));
+            }
+    }
+    createBars();
+
+    function moveBar (layer,code)
+    {
+        var freeX, freeY, posX, posY
+        for(i=0;i<16;i++)
+             if(Matrix[i] == 0)
+             {
+                 freeX = i%4;
+                 freeY = Math.floor(i/4);
+                 break;
+             }
+        for(j=0;j<16;j++)
+             if(Matrix[j] == code)
+             {
+                 posX = j%4;
+                 posY = Math.floor(j/4);
+                 break;
+             }
+        if(((Math.abs(freeX-posX)<=1)&&(freeY==posY))
+           ||((Math.abs(freeY-posY)<=1)&&(freeX==posX)))
+        {
+            setPosition(layer, startX+step*(freeX+1), startY+step*(freeY+1));
+            Matrix[freeX+4*freeY] = code;
+            Matrix[posX+4*posY] = 0;
+        }
+        checkWin();
+    }
+
+    function checkWin()
+    {
+        for(i=0;i<15;i++)
+            if(Matrix[i] != i+1)
+                return;
+        alert("Win!!!");
+        window.location.reload();
+    }
+//-->
+</SCRIPT>
+    </BODY>
+</HTML>
